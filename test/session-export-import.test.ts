@@ -681,6 +681,15 @@ test("importSession rejects archives that do not match the expected agent", asyn
 });
 
 test("importSession accepts built-in agent archives across adapter command drift", async () => {
+  for (const archivedCommand of [
+    "npx -y @agentclientprotocol/codex-acp@^0.0.1",
+    "npx -y --package=@agentclientprotocol/codex-acp@^0.0.1 -- codex-acp",
+  ]) {
+    await importArchiveSavedUnderCodexCommand(archivedCommand);
+  }
+});
+
+async function importArchiveSavedUnderCodexCommand(archivedCommand: string): Promise<void> {
   await withTempHome("acpx-export-import-", async (homeDir) => {
     const cwd = path.join(homeDir, "workspace");
     const archivePath = path.join(homeDir, "archive.json");
@@ -707,9 +716,9 @@ test("importSession accepts built-in agent archives across adapter command drift
         state: { agent_command?: string };
       };
     };
-    archive.session.agent = "npx -y @agentclientprotocol/codex-acp@^0.0.1";
+    archive.session.agent = archivedCommand;
     archive.session.agent_name = "codex";
-    archive.session.state.agent_command = "npx -y @agentclientprotocol/codex-acp@^0.0.1";
+    archive.session.state.agent_command = archivedCommand;
     await fs.writeFile(archivePath, `${JSON.stringify(archive, null, 2)}\n`, "utf8");
 
     const imported = await importSession(archivePath, {
@@ -718,9 +727,9 @@ test("importSession accepts built-in agent archives across adapter command drift
     });
     const record = await resolveSessionRecord(imported.record_id);
 
-    assert.equal(record.agentCommand, AGENT_REGISTRY.codex);
+    assert.equal(record.agentCommand, AGENT_REGISTRY.codex, archivedCommand);
   });
-});
+}
 
 test("importSession ignores stale agent_name when commands match exactly", async () => {
   await withTempHome("acpx-export-import-", async (homeDir) => {

@@ -10,6 +10,7 @@ Repo: https://github.com/openclaw/acpx
 
 - Docs/prompting: list `-s, --session` and `--no-wait` as options of `prompt` and the bare form only; `exec` rejects them with `unknown option`. Thanks @KrasimirKralev.
 - CLI: unknown options and other usage errors on subcommands (`acpx codex exec --bogus`, `acpx sessions list --bogus`) now exit with code 2 as documented, and `--format json` reports them as a JSON-RPC error instead of plain text only; they used to exit 1. Thanks @KrasimirKralev.
+- Agents/launch: start npm-backed built-in adapters (pi, codex, claude, kilocode, mux, opencode) when acpx itself runs under `npx` and the Node-relative npm bridge is unavailable, instead of exiting with code 127 before initialize. Thanks @kanzaki-chiya.
 
 ## 0.21.1 - 2026-10-26
 

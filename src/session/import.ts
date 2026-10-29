@@ -223,11 +223,11 @@ function commandLooksLikeBuiltInAgent(command: string, agentName: string): boole
   const normalized = command.trim();
   switch (agentName) {
     case "pi":
-      return /(?:^|\s)pi-acp(?:@|\s|$)/.test(normalized);
+      return /(?:^|\s|=)pi-acp(?:@|\s|$)/.test(normalized);
     case "codex":
-      return /(?:^|\s)@agentclientprotocol\/codex-acp(?:@|\s|$)/.test(normalized);
+      return /(?:^|\s|=)@agentclientprotocol\/codex-acp(?:@|\s|$)/.test(normalized);
     case "claude":
-      return /(?:^|\s)@agentclientprotocol\/claude-agent-acp(?:@|\s|$)/.test(normalized);
+      return /(?:^|\s|=)@agentclientprotocol\/claude-agent-acp(?:@|\s|$)/.test(normalized);
     default:
       return false;
   }
