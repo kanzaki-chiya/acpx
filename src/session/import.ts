@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z, ZodError } from "zod";
+import { canonicalAgentCommand } from "../acp/builtin-command-migration.js";
 import { AcpxOperationalError } from "../errors.js";
 import { writePrivateFile } from "../state-files.js";
 import type { AcpJsonRpcMessage, SessionRecord } from "../types.js";
@@ -211,7 +212,10 @@ function agentCommandMatchesExpected(
   expectedAgentCommand: string,
   expectedAgentName: string | undefined,
 ): boolean {
-  if (archivedCommand === expectedAgentCommand) {
+  if (
+    archivedCommand === expectedAgentCommand ||
+    canonicalAgentCommand(archivedCommand) === expectedAgentCommand
+  ) {
     return true;
   }
   return expectedAgentName

@@ -685,11 +685,43 @@ test("importSession accepts built-in agent archives across adapter command drift
     "npx -y @agentclientprotocol/codex-acp@^0.0.1",
     "npx -y --package=@agentclientprotocol/codex-acp@^0.0.1 -- codex-acp",
   ]) {
-    await importArchiveSavedUnderCodexCommand(archivedCommand);
+    await importArchiveSavedUnderCommand("codex", archivedCommand);
   }
 });
 
-async function importArchiveSavedUnderCodexCommand(archivedCommand: string): Promise<void> {
+test("importSession accepts archives saved under previous npx built-in defaults", async () => {
+  for (const [agentName, archivedCommand] of [
+    ["kilocode", "npx -y @kilocode/cli acp"],
+    ["mux", "npx -y mux@^0.28.0 acp"],
+    ["mux", "npx -y mux@^0.27.0 acp"],
+    ["opencode", "npx -y opencode-ai acp"],
+    ["opencode", "npx opencode-ai"],
+  ] as const) {
+    await importArchiveSavedUnderCommand(agentName, archivedCommand);
+  }
+});
+
+test("importSession rejects previous built-in defaults imported under another agent", async () => {
+  for (const [agentName, archivedCommand] of [
+    ["opencode", "npx -y @kilocode/cli acp"],
+    ["kilocode", "npx -y mux@^0.28.0 acp"],
+    ["mux", "npx -y opencode-ai acp"],
+  ] as const) {
+    await assert.rejects(
+      importArchiveSavedUnderCommand(agentName, archivedCommand),
+      (error: unknown) => {
+        assert.equal((error as { code?: unknown }).code, "agent-mismatch", archivedCommand);
+        return true;
+      },
+    );
+  }
+});
+
+async function importArchiveSavedUnderCommand(
+  agentName: string,
+  archivedCommand: string,
+): Promise<void> {
+  const agentCommand = AGENT_REGISTRY[agentName];
   await withTempHome("acpx-export-import-", async (homeDir) => {
     const cwd = path.join(homeDir, "workspace");
     const archivePath = path.join(homeDir, "archive.json");
@@ -698,15 +730,12 @@ async function importArchiveSavedUnderCodexCommand(archivedCommand: string): Pro
     const source = makeSessionRecord({
       acpxRecordId: "source-record",
       acpSessionId: "provider-session",
-      agentCommand: AGENT_REGISTRY.codex,
+      agentCommand,
       cwd,
       name: "debug",
     });
     await writeSessionRecordFile(homeDir, source);
-    await exportSession(
-      { agentName: "codex", agentCommand: AGENT_REGISTRY.codex, cwd, name: "debug" },
-      archivePath,
-    );
+    await exportSession({ agentName, agentCommand, cwd, name: "debug" }, archivePath);
     await fs.rm(sessionFilePath(homeDir, source.acpxRecordId));
 
     const archive = JSON.parse(await fs.readFile(archivePath, "utf8")) as {
@@ -717,17 +746,17 @@ async function importArchiveSavedUnderCodexCommand(archivedCommand: string): Pro
       };
     };
     archive.session.agent = archivedCommand;
-    archive.session.agent_name = "codex";
+    archive.session.agent_name = agentName;
     archive.session.state.agent_command = archivedCommand;
     await fs.writeFile(archivePath, `${JSON.stringify(archive, null, 2)}\n`, "utf8");
 
     const imported = await importSession(archivePath, {
-      expectedAgentName: "codex",
-      expectedAgentCommand: AGENT_REGISTRY.codex,
+      expectedAgentName: agentName,
+      expectedAgentCommand: agentCommand,
     });
     const record = await resolveSessionRecord(imported.record_id);
 
-    assert.equal(record.agentCommand, AGENT_REGISTRY.codex, archivedCommand);
+    assert.equal(record.agentCommand, agentCommand, archivedCommand);
   });
 }
 

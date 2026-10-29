@@ -102,7 +102,7 @@ Friendly agent names resolve to commands:
 - `kimi` -> `kimi acp`
 - `kiro` -> `kiro-cli-chat acp`
 - `mcode` -> `mcode acp` (install/authenticate MCode first; prefer `exec` for one-shot work, and require advertised ACP reload support for cross-invocation continuity)
-- `mux` -> `mux acp` via an ACPX-owned npm range
+- `mux` -> `npx -y --package=mux -- mux acp` via an ACPX-owned npm range
 - `octomind` -> `octomind acp developer:general` (install Octomind and sign in with `octomind login` or provider keys first; see the [Octomind guide](https://github.com/openclaw/acpx/blob/main/agents/Octomind.md))
 - `opencode` -> `npx -y --package=opencode-ai -- opencode acp`
 - `pool` -> `pool acp`
